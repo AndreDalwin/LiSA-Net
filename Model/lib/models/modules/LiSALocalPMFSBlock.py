@@ -1,11 +1,4 @@
-# -*- encoding: utf-8 -*-
-"""
-@author   :   yykzjh    
-@Contact  :   yykzhjh@163.com
-@DateTime :   2022/12/3 20:02
-@Version  :   1.0
-@License  :   (C)Copyright 2022
-"""
+
 import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../../"))
