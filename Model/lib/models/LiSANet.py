@@ -7,9 +7,9 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../
 import torch
 import torch.nn as nn
 
-from lib.models.modules.ConvBlock import ConvBlock
-from lib.models.modules.LocalPMFSBlock import DownSampleWithLocalPMFSBlock
-from lib.models.modules.GlobalPMFSBlock import GlobalPMFSBlock_AP_Separate
+from lib.models.modules.LiSAConvBlock import ConvBlock
+from lib.models.modules.LiSALocalPMFSBlock import DownSampleWithLocalPMFSBlock
+from lib.models.modules.LiSAGlobalPMFSBlock import GlobalPMFSBlock_AP_Separate
 
 
 class LiSANet(nn.Module):
@@ -20,30 +20,13 @@ class LiSANet(nn.Module):
 
         self.scaling_version = scaling_version
 
-        if scaling_version == "BASIC":
-            base_channels = [24, 48, 64]
-            skip_channels = [24, 48, 64]
-            units = [5, 10, 10]
-            pmfs_ch = 64
-        elif scaling_version == "SMALL":
-            base_channels = [24, 24, 24]
-            skip_channels = [12, 24, 24]
-            units = [5, 10, 10]
-            pmfs_ch = 48
-        elif scaling_version == "TINY":
-            base_channels = [24, 24, 24]
-            skip_channels = [12, 24, 24]
-            units = [3, 5, 5]
-            pmfs_ch = 48
-        else:
-            raise RuntimeError(f"{scaling_version} scaling version is not available")
+        base_channels = [24, 48, 64]
+        skip_channels = [24, 48, 64]
+        units = [5, 10, 10]
+        pmfs_ch = 64
 
-        if dim == "3d":
-            upsample_mode = 'trilinear'
-        elif dim == "2d":
-            upsample_mode = 'bilinear'
-        else:
-            raise RuntimeError(f"{dim} dimension is error")
+        upsample_mode = 'bilinear'
+
         kernel_sizes = [5, 3, 3]
         growth_rates = [4, 8, 16]
         downsample_channels = [base_channels[i] + units[i] * growth_rates[i] for i in range(len(base_channels))]
