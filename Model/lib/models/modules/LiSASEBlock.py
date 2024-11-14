@@ -4,12 +4,7 @@ import torch.nn as nn
 class SEBlock(nn.Module):
     def __init__(self, channels, reduction=16, dim="2d"):
         super(SEBlock, self).__init__()
-        if dim == "3d":
-            self.avg_pool = nn.AdaptiveAvgPool3d(1)
-        elif dim == "2d":
-            self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        else:
-            raise ValueError(f"Invalid dimension '{dim}' for SEBlock")
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
 
         self.fc = nn.Sequential(
             nn.Linear(channels, channels // reduction, bias=False),

@@ -13,7 +13,7 @@ class ConvBlock(torch.nn.Module):
             batch_norm=True,
             preactivation=False,
             dim="2d",
-            use_se=False
+            use_se=True
     ):
         super().__init__()
 
