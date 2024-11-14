@@ -43,7 +43,7 @@ class LiSANet(nn.Module):
                     growth_rate=growth_rates[i],
                     downsample=True,
                     skip=((i < 2) if scaling_version == "BASIC" else True),
-                    dim=dim
+                    dim=dim,
                 )
             )
 
@@ -87,7 +87,8 @@ class LiSANet(nn.Module):
             stride=1,
             batch_norm=True,
             preactivation=True,
-            dim=dim
+            dim=dim,
+            use_se=True
         )
         self.upsample_out = torch.nn.Upsample(scale_factor=2, mode=upsample_mode)
 

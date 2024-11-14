@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+from lib.models.modules.LiSASEBlock import SEBlock
 
 class ConvBlock(torch.nn.Module):
     def __init__(
@@ -11,7 +12,8 @@ class ConvBlock(torch.nn.Module):
             stride=1,
             batch_norm=True,
             preactivation=False,
-            dim="2d"
+            dim="2d",
+            use_se=False
     ):
         super().__init__()
 
@@ -56,24 +58,24 @@ class ConvBlock(torch.nn.Module):
             layers.append(torch.nn.ReLU())
 
         self.conv = torch.nn.Sequential(*layers)
+        self.use_se = use_se
+        if use_se:
+            self.se_block = SEBlock(out_channel, reduction=16, dim=dim)
 
     def forward(self, x):
-        return self.conv(x)
+        x = self.conv(x)
+        if self.use_se:
+            x = self.se_block(x)
+        return x
 
 
 class SingleConvBlock(nn.Module):
 
-    def __init__(self, in_channel, out_channel, kernel_size, stride, dim="3d"):
+    def __init__(self, in_channel, out_channel, kernel_size, stride, dim="2d"):
         super(SingleConvBlock, self).__init__()
 
-        if dim == "3d":
-            conv = nn.Conv3d
-            bn = nn.BatchNorm3d
-        elif dim == "2d":
-            conv = nn.Conv2d
-            bn = nn.BatchNorm2d
-        else:
-            raise RuntimeError(f"{dim} dimension is error")
+        conv = nn.Conv2d
+        bn = nn.BatchNorm2d
 
         self.conv = nn.Sequential(
             conv(in_channel, out_channel, kernel_size, stride, kernel_size // 2, bias=False),
@@ -95,20 +97,14 @@ class DepthWiseSeparateConvBlock(nn.Module):
             stride=1,
             batch_norm=True,
             preactivation=False,
-            dim="3d"
+            dim="2d"
     ):
         super(DepthWiseSeparateConvBlock, self).__init__()
 
-        if dim == "3d":
-            constant_pad = torch.nn.ConstantPad3d
-            conv = torch.nn.Conv3d
-            bn = torch.nn.BatchNorm3d
-        elif dim == "2d":
-            constant_pad = torch.nn.ConstantPad2d
-            conv = torch.nn.Conv2d
-            bn = torch.nn.BatchNorm2d
-        else:
-            raise RuntimeError(f"{dim} dimension is error")
+
+        constant_pad = torch.nn.ConstantPad2d
+        conv = torch.nn.Conv2d
+        bn = torch.nn.BatchNorm2d
 
         padding = kernel_size - stride
         if padding % 2 != 0:
