@@ -6,7 +6,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../
 import torch
 import torch.nn as nn
 
-from lib.models.modules.ConvBlock import DepthWiseSeparateConvBlock
+from lib.models.modules.LiSAConvBlock import DepthWiseSeparateConvBlock
 
 
 class GlobalPMFSBlock_AP_Separate(nn.Module):

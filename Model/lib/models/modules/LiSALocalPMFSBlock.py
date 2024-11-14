@@ -6,7 +6,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../
 import torch
 import torch.nn as nn
 
-from lib.models.modules.ConvBlock import ConvBlock
+from lib.models.modules.LiSAConvBlock import ConvBlock
 
 
 class DenseFeatureStackWithLocalPMFSBlock(nn.Module):
@@ -24,7 +24,8 @@ class DenseFeatureStackWithLocalPMFSBlock(nn.Module):
                     stride=1,
                     batch_norm=True,
                     preactivation=True,
-                    dim=dim
+                    dim=dim,
+                    use_se=True
                 )
             )
             in_channel += growth_rate
@@ -59,7 +60,8 @@ class DownSampleWithLocalPMFSBlock(nn.Module):
             stride=(2 if downsample else 1),
             batch_norm=True,
             preactivation=True,
-            dim=dim
+            dim=dim,
+            use_se=True
         )
 
         self.dfs_with_pmfs = DenseFeatureStackWithLocalPMFSBlock(
@@ -78,7 +80,8 @@ class DownSampleWithLocalPMFSBlock(nn.Module):
                 stride=1,
                 batch_norm=True,
                 preactivation=True,
-                dim=dim
+                dim=dim,
+                use_se=True
             )
 
     def forward(self, x):

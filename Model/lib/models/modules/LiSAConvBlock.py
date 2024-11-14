@@ -58,6 +58,8 @@ class ConvBlock(torch.nn.Module):
             layers.append(torch.nn.ReLU())
 
         self.conv = torch.nn.Sequential(*layers)
+
+        # Implement SE
         self.use_se = use_se
         if use_se:
             self.se_block = SEBlock(out_channel, reduction=16, dim=dim)
