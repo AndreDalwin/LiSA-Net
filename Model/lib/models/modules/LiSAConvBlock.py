@@ -79,7 +79,6 @@ class ConvBlock(torch.nn.Module):
             x = self.se_block(x)
         return x
 
-
 class SingleConvBlock(nn.Module):
 
     def __init__(self, in_channel, out_channel, kernel_size, stride, dim="2d"):

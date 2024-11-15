@@ -5,9 +5,10 @@ import torch.nn as nn
 class SEBlock(nn.Module):
     def __init__(self, channels, reduction=16, dim="2d"):
         super(SEBlock, self).__init__()
+        self.dim = dim  # Store the dimension for use in forward
         if dim == "3d":
             self.avg_pool = nn.AdaptiveAvgPool3d(1)
-        elif dim =="2d":
+        elif dim == "2d":
             self.avg_pool = nn.AdaptiveAvgPool2d(1)
         else:
             raise ValueError(f"Invalid dimension '{dim}' for SEBlock")
@@ -21,8 +22,10 @@ class SEBlock(nn.Module):
 
     def forward(self, x):
         y = self.avg_pool(x)
-        y = self.fc1(y)
-        y = self.relu(y)
-        y = self.fc2(y)
-        y = self.sigmoid(y)
+        y = torch.flatten(y, 1)  # Flatten to (batch_size, channels)
+        y = self.fc(y)
+        if self.dim == "3d":
+            y = y.view(y.size(0), y.size(1), 1, 1, 1)  # Reshape for broadcasting
+        else:
+            y = y.view(y.size(0), y.size(1), 1, 1)  # Reshape for broadcasting
         return x * y
