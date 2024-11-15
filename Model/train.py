@@ -80,11 +80,12 @@ params_ISIC_2018 = {
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", type=str, default="PMFSNet", help="model name")
+    parser.add_argument("--dataset", type=str, default="ISIC-2018", help="dataset name")
+    parser.add_argument("--model", type=str, default="LiSANet", help="model name")
     parser.add_argument("--pretrain_weight", type=str, default=None, help="pre-trained weight file path")
-    parser.add_argument("--dimension", type=str, default="3d", help="dimension of dataset images and models")
+    parser.add_argument("--dimension", type=str, default="2d", help="dimension of dataset images and models")
     parser.add_argument("--scaling_version", type=str, default="BASIC", help="scaling version of PMFSNet")
-    parser.add_argument("--epoch", type=int, default=None, help="training epoch")
+    parser.add_argument("--epoch", type=int, default=150, help="training epoch")
     args = parser.parse_args()
     return args
 

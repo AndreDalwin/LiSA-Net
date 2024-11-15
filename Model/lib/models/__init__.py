@@ -46,6 +46,7 @@ from .MsRED import Ms_red_v1, Ms_red_v2
 from .MobileNetV2 import MobileNetV2
 
 from .PMFSNet import PMFSNet
+from .LiSANet import LiSANet
 
 
 def get_model_optimizer_lr_scheduler(opt):
@@ -135,6 +136,9 @@ def get_model_optimizer_lr_scheduler(opt):
         elif opt["model_name"] == "PMFSNet":
             model = PMFSNet(in_channels=opt["in_channels"], out_channels=opt["classes"], dim=opt["dimension"], scaling_version=opt["scaling_version"])
 
+        elif opt["model_name"] == "LiSANet":
+            model = LiSANet(in_channels=opt["in_channels"], out_channels=opt["classes"], dim=opt["dimension"], scaling_version=opt["scaling_version"])
+
         else:
             raise RuntimeError(f"No {opt['model_name']} model available on {opt['dataset_name']} dataset")
 
@@ -176,6 +180,9 @@ def get_model_optimizer_lr_scheduler(opt):
     elif opt["dataset_name"] == "ISIC-2018":
         if opt["model_name"] == "PMFSNet":
             model = PMFSNet(in_channels=opt["in_channels"], out_channels=opt["classes"], dim=opt["dimension"], scaling_version=opt["scaling_version"])
+
+        elif opt["model_name"] == "LiSANet":
+            model = LiSANet(in_channels=opt["in_channels"], out_channels=opt["classes"], dim=opt["dimension"], scaling_version=opt["scaling_version"])
 
         elif opt["model_name"] == "MobileNetV2":
             model = MobileNetV2(in_channels=opt["in_channels"], out_channels=opt["classes"], input_size=opt["resize_shape"][0], width_mult=1.)

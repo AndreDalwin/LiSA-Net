@@ -20,13 +20,30 @@ class LiSANet(nn.Module):
 
         self.scaling_version = scaling_version
 
-        base_channels = [24, 48, 64]
-        skip_channels = [24, 48, 64]
-        units = [5, 10, 10]
-        pmfs_ch = 64
+        if scaling_version == "BASIC":
+            base_channels = [24, 48, 64]
+            skip_channels = [24, 48, 64]
+            units = [5, 10, 10]
+            pmfs_ch = 64
+        elif scaling_version == "SMALL":
+            base_channels = [24, 24, 24]
+            skip_channels = [12, 24, 24]
+            units = [5, 10, 10]
+            pmfs_ch = 48
+        elif scaling_version == "TINY":
+            base_channels = [24, 24, 24]
+            skip_channels = [12, 24, 24]
+            units = [3, 5, 5]
+            pmfs_ch = 48
+        else:
+            raise RuntimeError(f"{scaling_version} scaling version is not available")
 
-        upsample_mode = 'bilinear'
-
+        if dim == "3d":
+            upsample_mode = 'trilinear'
+        elif dim == "2d":
+            upsample_mode = 'bilinear'
+        else:
+            raise RuntimeError(f"{dim} dimension is error")
         kernel_sizes = [5, 3, 3]
         growth_rates = [4, 8, 16]
         downsample_channels = [base_channels[i] + units[i] * growth_rates[i] for i in range(len(base_channels))]
@@ -43,7 +60,7 @@ class LiSANet(nn.Module):
                     growth_rate=growth_rates[i],
                     downsample=True,
                     skip=((i < 2) if scaling_version == "BASIC" else True),
-                    dim=dim,
+                    dim=dim
                 )
             )
 
@@ -57,28 +74,40 @@ class LiSANet(nn.Module):
             dim=dim
         )
 
-        self.up2 = torch.nn.Upsample(scale_factor=2, mode=upsample_mode)
-        self.up_conv2 = basic_module(in_channel=downsample_channels[2] + skip_channels[1],
-                                        base_channel=base_channels[1],
-                                        kernel_size=3,
-                                        unit=units[1],
-                                        growth_rate=growth_rates[1],
-                                        downsample=False,
-                                        skip=False,
-                                        dim=dim)
+        if scaling_version == "BASIC":
+            self.up2 = torch.nn.Upsample(scale_factor=2, mode=upsample_mode)
+            self.up_conv2 = basic_module(in_channel=downsample_channels[2] + skip_channels[1],
+                                         base_channel=base_channels[1],
+                                         kernel_size=3,
+                                         unit=units[1],
+                                         growth_rate=growth_rates[1],
+                                         downsample=False,
+                                         skip=False,
+                                         dim=dim)
 
-        self.up1 = torch.nn.Upsample(scale_factor=2, mode=upsample_mode)
-        self.up_conv1 = basic_module(in_channel=downsample_channels[1] + skip_channels[0],
-                                        base_channel=base_channels[0],
-                                        kernel_size=3,
-                                        unit=units[0],
-                                        growth_rate=growth_rates[0],
-                                        downsample=False,
-                                        skip=False,
-                                        dim=dim)
-        
+            self.up1 = torch.nn.Upsample(scale_factor=2, mode=upsample_mode)
+            self.up_conv1 = basic_module(in_channel=downsample_channels[1] + skip_channels[0],
+                                         base_channel=base_channels[0],
+                                         kernel_size=3,
+                                         unit=units[0],
+                                         growth_rate=growth_rates[0],
+                                         downsample=False,
+                                         skip=False,
+                                         dim=dim)
+        else:
+            self.bottle_conv = ConvBlock(
+                in_channel=downsample_channels[2] + skip_channels[2],
+                out_channel=skip_channels[2],
+                kernel_size=3,
+                stride=1,
+                batch_norm=True,
+                preactivation=True,
+                dim=dim,
+                use_se=True
+            )
 
-            
+            self.upsample_1 = torch.nn.Upsample(scale_factor=2, mode=upsample_mode)
+            self.upsample_2 = torch.nn.Upsample(scale_factor=4, mode=upsample_mode)
 
         self.out_conv = ConvBlock(
             in_channel=(downsample_channels[0] if scaling_version == "BASIC" else sum(skip_channels)),
@@ -87,8 +116,7 @@ class LiSANet(nn.Module):
             stride=1,
             batch_norm=True,
             preactivation=True,
-            dim=dim,
-            use_se=True
+            dim=dim
         )
         self.upsample_out = torch.nn.Upsample(scale_factor=2, mode=upsample_mode)
 
