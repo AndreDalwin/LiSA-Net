@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 
 class SEBlock(nn.Module):
-    def __init__(self, channels, reduction=16, dim="2d"):
+    def __init__(self, channels, reduction=8, dim="2d"):
         super(SEBlock, self).__init__()
         self.dim = dim  # Store the dimension for use in forward
         if dim == "3d":
@@ -28,4 +28,4 @@ class SEBlock(nn.Module):
             y = y.view(y.size(0), y.size(1), 1, 1, 1)  # Reshape for broadcasting
         else:
             y = y.view(y.size(0), y.size(1), 1, 1)  # Reshape for broadcasting
-        return x * y
+        return x * y + x
