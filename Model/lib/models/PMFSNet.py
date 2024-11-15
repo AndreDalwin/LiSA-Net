@@ -174,13 +174,16 @@ if __name__ == '__main__':
 
     scaling_versions = ["BASIC", "SMALL", "TINY"]
 
-    xs = [torch.randn((1, 1, 160, 160, 96)).to(device), torch.randn((1, 3, 224, 224)).to(device)]
+    # xs = [torch.randn((1, 1, 160, 160, 96)).to(device), torch.randn((1, 3, 224, 224)).to(device)]
 
+    # for i, dim in enumerate(dims):
+    #     for scaling_version in scaling_versions:
+    #         model = PMFSNet(in_channels=channels[i], out_channels=2, dim=dim, scaling_version=scaling_version).to(device)
+    #         y = model(xs[i])
+    #         print(dim + "-" + scaling_version, ":")
+    #         print(xs[i].size())
+    #         print(y.size())
+    #         print("params: {:.6f}M".format(count_parameters(model)))
     for i, dim in enumerate(dims):
-        for scaling_version in scaling_versions:
-            model = PMFSNet(in_channels=channels[i], out_channels=2, dim=dim, scaling_version=scaling_version).to(device)
-            y = model(xs[i])
-            print(dim + "-" + scaling_version, ":")
-            print(xs[i].size())
-            print(y.size())
-            print("params: {:.6f}M".format(count_parameters(model)))
+        model = PMFSNet(in_channels=channels[i], out_channels=2, dim="2d", scaling_version="BASIC").to(device)
+        print("params: {:.6f}M".format(count_parameters(model)))
