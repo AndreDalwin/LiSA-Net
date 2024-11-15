@@ -1,3 +1,4 @@
+# LiSAConvBlock.py
 import torch
 import torch.nn as nn
 
@@ -17,10 +18,16 @@ class ConvBlock(torch.nn.Module):
     ):
         super().__init__()
 
-
-        constant_pad = torch.nn.ConstantPad2d
-        conv = torch.nn.Conv2d
-        bn = torch.nn.BatchNorm2d
+        if dim == "3d":
+            constant_pad = torch.nn.ConstantPad3d
+            conv = torch.nn.Conv3d
+            bn = torch.nn.BatchNorm3d
+        elif dim == "2d":
+            constant_pad = torch.nn.ConstantPad2d
+            conv = torch.nn.Conv2d
+            bn = torch.nn.BatchNorm2d
+        else:
+            raise ValueError(f"Invalid dimension '{dim}' for ConvBlock")
 
         padding = kernel_size - stride
         if padding % 2 != 0:
@@ -32,13 +39,14 @@ class ConvBlock(torch.nn.Module):
 
         if preactivation:
             layers = [
-                torch.nn.ReLU(),
+                torch.nn.ReLU(inplace=True),
                 pad,
                 conv(
                     in_channels=in_channel,
                     out_channels=out_channel,
                     kernel_size=kernel_size,
                     stride=stride,
+                    bias=False
                 ),
             ]
             if batch_norm:
@@ -51,11 +59,12 @@ class ConvBlock(torch.nn.Module):
                     out_channels=out_channel,
                     kernel_size=kernel_size,
                     stride=stride,
+                    bias=False
                 ),
             ]
             if batch_norm:
                 layers.append(bn(out_channel))
-            layers.append(torch.nn.ReLU())
+            layers.append(torch.nn.ReLU(inplace=True))
 
         self.conv = torch.nn.Sequential(*layers)
 
@@ -76,8 +85,14 @@ class SingleConvBlock(nn.Module):
     def __init__(self, in_channel, out_channel, kernel_size, stride, dim="2d"):
         super(SingleConvBlock, self).__init__()
 
-        conv = nn.Conv2d
-        bn = nn.BatchNorm2d
+        if dim == "3d":
+            conv = nn.Conv3d
+            bn = nn.BatchNorm3d
+        elif dim == "2d":
+            conv = nn.Conv2d
+            bn = nn.BatchNorm2d
+        else:
+            raise ValueError(f"Invalid dimension '{dim}' for SingleConvBlock")
 
         self.conv = nn.Sequential(
             conv(in_channel, out_channel, kernel_size, stride, kernel_size // 2, bias=False),
@@ -103,10 +118,16 @@ class DepthWiseSeparateConvBlock(nn.Module):
     ):
         super(DepthWiseSeparateConvBlock, self).__init__()
 
-
-        constant_pad = torch.nn.ConstantPad2d
-        conv = torch.nn.Conv2d
-        bn = torch.nn.BatchNorm2d
+        if dim == "3d":
+            constant_pad = torch.nn.ConstantPad3d
+            conv = torch.nn.Conv3d
+            bn = torch.nn.BatchNorm3d
+        elif dim == "2d":
+            constant_pad = torch.nn.ConstantPad2d
+            conv = torch.nn.Conv2d
+            bn = torch.nn.BatchNorm2d
+        else:
+            raise ValueError(f"Invalid dimension '{dim}' for DepthWiseSeparateConvBlock")
 
         padding = kernel_size - stride
         if padding % 2 != 0:
@@ -118,7 +139,7 @@ class DepthWiseSeparateConvBlock(nn.Module):
 
         if preactivation:
             layers = [
-                torch.nn.ReLU(),
+                torch.nn.ReLU(inplace=True),
                 pad,
                 conv(
                     in_channels=in_channel,
@@ -133,7 +154,7 @@ class DepthWiseSeparateConvBlock(nn.Module):
                     out_channels=out_channel,
                     kernel_size=1,
                     stride=1,
-                    bias=True
+                    bias=False
                 )
             ]
             if batch_norm:
@@ -159,7 +180,7 @@ class DepthWiseSeparateConvBlock(nn.Module):
             ]
             if batch_norm:
                 layers.append(bn(out_channel))
-            layers.append(torch.nn.ReLU())
+            layers.append(torch.nn.ReLU(inplace=True))
 
         self.conv = torch.nn.Sequential(*layers)
 

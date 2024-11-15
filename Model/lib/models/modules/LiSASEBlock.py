@@ -1,3 +1,4 @@
+# LiSASEBlock.py
 import torch
 import torch.nn as nn
 
@@ -19,7 +20,9 @@ class SEBlock(nn.Module):
         )
 
     def forward(self, x):
-        b, c = x.size(0), x.size(1)
-        y = self.avg_pool(x).view(b, c)
-        y = self.fc(y).view(b, c, *([1] * (x.dim() - 2)))
-        return x * y.expand_as(x)
+        y = self.avg_pool(x)
+        y = self.fc1(y)
+        y = self.relu(y)
+        y = self.fc2(y)
+        y = self.sigmoid(y)
+        return x * y
