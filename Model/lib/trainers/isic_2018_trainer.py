@@ -121,7 +121,7 @@ class ISIC2018Trainer:
             dice_loss = self.loss_function(output, target)
             dice_loss.backward()
             self.optimizer.step()
-            self.optimizer.zero_grad()
+            self.optimizer.zero_grad() 
 
             self.calculate_metric_and_update_statistcs(output.cpu().float(), target.cpu().float(), len(target), dice_loss.cpu(), mode="train")
 

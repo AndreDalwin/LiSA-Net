@@ -28,4 +28,4 @@ class SEBlock(nn.Module):
             y = y.view(y.size(0), y.size(1), 1, 1, 1)  # Reshape for broadcasting
         else:
             y = y.view(y.size(0), y.size(1), 1, 1)  # Reshape for broadcasting
-        return x * y + x
+        return x * y

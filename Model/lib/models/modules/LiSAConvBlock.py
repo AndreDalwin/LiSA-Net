@@ -71,7 +71,7 @@ class ConvBlock(torch.nn.Module):
         # Implement SE
         self.use_se = use_se
         if use_se:
-            self.se_block = SEBlock(out_channel, reduction=16, dim=dim)
+            self.se_block = SEBlock(out_channel, reduction=8, dim=dim)
 
     def forward(self, x):
         x = self.conv(x)

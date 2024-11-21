@@ -77,7 +77,7 @@ params_ISIC_2018 = {
     "terminal_show_freq": 20,
     "save_epoch_freq": 50,
 }
-
+ 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", type=str, default="ISIC-2018", help="dataset name")
