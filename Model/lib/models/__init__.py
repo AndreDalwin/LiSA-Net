@@ -365,6 +365,9 @@ def get_model(opt):
         elif opt["model_name"] == "PMFSNet":
             model = PMFSNet(in_channels=opt["in_channels"], out_channels=opt["classes"], dim=opt["dimension"], scaling_version=opt["scaling_version"])
 
+        elif opt["model_name"] == "LiSANet":
+            model = PMFSNet(in_channels=opt["in_channels"], out_channels=opt["classes"], dim=opt["dimension"], scaling_version=opt["scaling_version"])
+
         else:
             raise RuntimeError(f"No {opt['model_name']} model available on {opt['dataset_name']} dataset")
 
@@ -405,6 +408,9 @@ def get_model(opt):
 
     elif opt["dataset_name"] == "ISIC-2018":
         if opt["model_name"] == "PMFSNet":
+            model = PMFSNet(in_channels=opt["in_channels"], out_channels=opt["classes"], dim=opt["dimension"], scaling_version=opt["scaling_version"])
+
+        elif opt["model_name"] == "LiSANet":
             model = PMFSNet(in_channels=opt["in_channels"], out_channels=opt["classes"], dim=opt["dimension"], scaling_version=opt["scaling_version"])
 
         elif opt["model_name"] == "MobileNetV2":
