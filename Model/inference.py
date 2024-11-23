@@ -232,12 +232,12 @@ params_ISIC_2018 = {
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset", type=str, default="3D-CBCT-Tooth", help="dataset name")
-    parser.add_argument("--model", type=str, default="PMFSNet", help="model name")
-    parser.add_argument("--pretrain_weight", type=str, default=None, help="pre-trained weight file path")
-    parser.add_argument("--dimension", type=str, default="3d", help="dimension of dataset images and models")
-    parser.add_argument("--scaling_version", type=str, default="TINY", help="scaling version of PMFSNet")
-    parser.add_argument("--image_path", type=str, default=None, help="path of inferred image")
+    parser.add_argument("--dataset", type=str, default="ISIC-2018", help="dataset name")
+    parser.add_argument("--model", type=str, default="UNet", help="model name")
+    parser.add_argument("--pretrain_weight", type=str, default="pretrain/latest_UNet.pth", help="pre-trained weight file path")
+    parser.add_argument("--dimension", type=str, default="2d", help="dimension of dataset images and models")
+    parser.add_argument("--scaling_version", type=str, default="BASIC", help="scaling version of PMFSNet")
+    parser.add_argument("--image_path", type=str, default="pretrain/ISIC_0012288.jpg", help="path of inferred image")
     args = parser.parse_args()
     return args
 

@@ -5,7 +5,7 @@ base_dir = './datasets'
 
 # Loop through the folders in the base directory
 for i in range(1, 6):
-    folder_name = f"ISIC-2018-1000-K{i}"
+    folder_name = f"ISIC_{i}"
     old_path = os.path.join(base_dir, folder_name)
     new_path = os.path.join(base_dir, "ISIC-2018")
     

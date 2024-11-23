@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 
 class SEBlock(nn.Module):
-    def __init__(self, channels, reduction=8, dim="2d"):
+    def __init__(self, channels, reduction=4, dim="2d"):
         super(SEBlock, self).__init__()
         self.dim = dim  # Store the dimension for use in forward
         if dim == "3d":
