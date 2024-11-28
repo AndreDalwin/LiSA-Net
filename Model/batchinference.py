@@ -1,11 +1,4 @@
-# -*- encoding: utf-8 -*-
-"""
-@author   :   yykzjh    
-@Contact  :   1378453948@qq.com
-@DateTime :   2023/12/31 04:01
-@Version  :   1.0
-@License  :   (C)Copyright 2023
-"""
+
 import os
 import argparse
 from glob import glob
@@ -235,7 +228,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", type=str, default="ISIC-2018", help="dataset name")
     parser.add_argument("--model", type=str, default="LiSANet", help="model name")
-    parser.add_argument("--pretrain_weight", type=str, default="pretrain/latest_LiSANet.pth", help="pre-trained weight file path")
+    parser.add_argument("--pretrain_weight", type=str, default="pretrain/LiSANet_K3.pth", help="pre-trained weight file path")
     parser.add_argument("--dimension", type=str, default="2d", help="dimension of dataset images and models")
     parser.add_argument("--scaling_version", type=str, default="BASIC", help="scaling version of PMFSNet")
     parser.add_argument("--images_dir", type=str, default="datasets/ISIC-2018-500-K1/train/images", help="directory containing images for inference")
