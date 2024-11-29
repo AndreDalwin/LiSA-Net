@@ -98,17 +98,6 @@ class DownSampleWithLocalPMFSBlock(nn.Module):
 
 
 if __name__ == '__main__':
-    # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    #
-    # x = torch.randn((1, 64, 32, 32, 32)).to(device)
-    #
-    # model = DownSampleWithLocalPMFSBlock(64, 128, 3, 5, 16, skip_channel=24, downsample=True, skip=True, dim="3d").to(device)
-    #
-    # output = model(x)
-    #
-    # print(x.size())
-    # print(output[0].size())
-    # print(output[1].size())
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
