@@ -1,12 +1,14 @@
-
 import os
 import argparse
-from glob import glob
+import glob
+import pathlib # Add imports
 
 import torch
 
 from lib import utils, dataloaders, models, metrics, testers
 
+# Parameters remain largely the same, but pretrain/resume will be set in the loop
+# ... (Keep params_3D_CBCT_Tooth, params_MMOTU, params_ISIC_2018 definitions as they are) ...
 params_3D_CBCT_Tooth = {
     # ——————————————————————————————————————————————    Launch Initialization    —————————————————————————————————————————————————
     "CUDA_VISIBLE_DEVICES": "0",
@@ -57,7 +59,7 @@ params_3D_CBCT_Tooth = {
             1: "foreground"
         },
     "resume": None,
-    "pretrain": None,
+    "pretrain": None, # Will be set in the loop
     # ——————————————————————————————————————————————    Optimizer     ——————————————————————————————————————————————————————
     "optimizer_name": "Adam",
     "learning_rate": 0.0005,
@@ -125,7 +127,7 @@ params_MMOTU = {
             1: "foreground"
         },
     "resume": None,
-    "pretrain": None,
+    "pretrain": None, # Will be set in the loop
     # ——————————————————————————————————————————————    Optimizer     ——————————————————————————————————————————————————————
     "optimizer_name": "AdamW",
     "learning_rate": 0.01,
@@ -189,7 +191,7 @@ params_ISIC_2018 = {
             1: "foreground"
         },
     "resume": None,
-    "pretrain": None,
+    "pretrain": None, # Will be set in the loop
     # ——————————————————————————————————————————————    Optimizer     ——————————————————————————————————————————————————————
     "optimizer_name": "AdamW",
     "learning_rate": 0.005,
@@ -225,21 +227,25 @@ params_ISIC_2018 = {
 
 
 def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset", type=str, default="ISIC-2018", help="dataset name")
-    parser.add_argument("--model", type=str, default="LiSANet", help="model name")
-    parser.add_argument("--pretrain_weight", type=str, default="pretrain/LiSANet-1000-K1.pth", help="pre-trained weight file path")
-    parser.add_argument("--dimension", type=str, default="2d", help="dimension of dataset images and models")
-    parser.add_argument("--scaling_version", type=str, default="BASIC", help="scaling version of PMFSNet")
-    parser.add_argument("--images_dir", type=str, default="inference/images", help="directory containing images for inference")
+    parser = argparse.ArgumentParser(description="Run inference for all K-folds of a model.") # Update description
+    parser.add_argument("--dataset", type=str, default="ISIC-2018", help="Dataset name (e.g., ISIC-2018, MMOTU, 3D-CBCT-Tooth)")
+    parser.add_argument("--model", type=str, default="UNet", help="Base model architecture name (e.g., LiSANet, PMFSNet)")
+    # Change pretrain_weight to model_prefix
+    parser.add_argument("--model_prefix", type=str, default="UNet-Base", help="Prefix for pre-trained weight files in pretrain/ (e.g., LiSANet-1000)")
+    parser.add_argument("--dimension", type=str, default="2d", help="Dimension of dataset images and models (e.g., 2d, 3d)")
+    parser.add_argument("--scaling_version", type=str, default="BASIC", help="Scaling version of PMFSNet (if applicable)")
+    parser.add_argument("--image_path", type=str, default="pretrain/ISIC_0000013.jpg", help="Path of the single image to run inference on")
+    # Add output_dir argument
+    parser.add_argument("--output_dir", type=str, default="inferences", help="Directory to save the output segmentation images")
     args = parser.parse_args()
     return args
 
 
 def main():
-    # Analyse console arguments
+    # analyse console arguments
     args = parse_args()
 
+    # select the dictionary of hyperparameters used for training
     if args.dataset == "3D-CBCT-Tooth":
         params = params_3D_CBCT_Tooth
     elif args.dataset == "MMOTU":
@@ -249,50 +255,85 @@ def main():
     else:
         raise RuntimeError(f"No {args.dataset} dataset available")
 
-    # Update the dictionary of hyperparameters used for training
+    # update the dictionary of hyperparameters used for training
     params["dataset_name"] = args.dataset
-    params["dataset_path"] = os.path.join(r"./datasets", ("NC-release-data-checked" if args.dataset == "3D-CBCT-Tooth" else args.dataset))
+    # Construct dataset path relative to workspace
+    params["dataset_path"] = os.path.join("datasets", ("NC-release-data-checked" if args.dataset == "3D-CBCT-Tooth" else args.dataset))
     params["model_name"] = args.model
-    if args.pretrain_weight is None:
-        raise RuntimeError("model weights cannot be None")
-    params["pretrain"] = args.pretrain_weight
+    # Remove pretrain weight setting here, will be set in loop
+    # if args.pretrain_weight is None:
+    #     raise RuntimeError("model weights cannot be None")
+    # params["pretrain"] = args.pretrain_weight
     params["dimension"] = args.dimension
     params["scaling_version"] = args.scaling_version
-    if args.images_dir is None:
-        raise RuntimeError("images directory cannot be None")
+    if not os.path.exists(args.image_path):
+         raise FileNotFoundError(f"Input image not found: {args.image_path}")
+    if not os.path.isdir("pretrain"):
+         raise FileNotFoundError("Directory 'pretrain/' not found.")
 
-    # Launch initialization
+    # launch initialization
     os.environ["CUDA_VISIBLE_DEVICES"] = params["CUDA_VISIBLE_DEVICES"]
-    os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
+    os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128" # Consider making this configurable if needed
     utils.reproducibility(params["seed"], params["deterministic"], params["benchmark"])
 
-    # Get the cuda device
+    # get the cuda device
     if params["cuda"]:
         params["device"] = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     else:
         params["device"] = torch.device("cpu")
-    print(params["device"])
+    print(f"Using device: {params['device']}")
     print("Complete the initialization of configuration")
 
-    # Initialize the model
+    # Find K-fold weight files
+    weight_files_pattern = os.path.join("pretrain", f"{args.model_prefix}-K[1-5].pth") # Use pattern for K1-K5
+    weight_files = sorted(glob.glob(weight_files_pattern))
+
+    if not weight_files:
+        raise FileNotFoundError(f"No weight files found matching pattern: {weight_files_pattern}")
+
+    print(f"Found {len(weight_files)} weight files for prefix '{args.model_prefix}':")
+    for wf in weight_files:
+        print(f"  - {wf}")
+
+    # Create output directory
+    output_dir_path = pathlib.Path(args.output_dir)
+    output_dir_path.mkdir(parents=True, exist_ok=True)
+    print(f"Output directory: {output_dir_path.resolve()}")
+
+    # Initialize the model (once, assuming same architecture for all folds)
     model = models.get_model(params)
-    print("Complete the initialization of model:{}".format(params["model_name"]))
+    print(f"Initialized model: {params['model_name']}")
 
-    # Initialize the tester
+    # Initialize the tester (once)
     tester = testers.get_tester(params, model)
-    print("Complete the initialization of tester")
+    print(f"Initialized tester for dataset: {params['dataset_name']}")
 
-    # Load training weights
-    tester.load()
-    print("Complete loading training weights")
+    # Loop through weight files, load weights, and run inference
+    for weight_file in weight_files:
+        print(f"--- Processing weight file: {weight_file} ---")
+        params["pretrain"] = weight_file # Set current weight file in params
 
-    # Get all image paths from the specified directory
-    image_paths = glob(os.path.join(args.images_dir, '*'))
+        # load training weights
+        try:
+            tester.load() # Assumes tester uses params["pretrain"] internally
+            print("Complete loading training weights")
+        except Exception as e:
+            print(f"Error loading weights from {weight_file}: {e}")
+            continue # Skip to next weight file if loading fails
 
-    # Perform inference on each image
-    for image_path in image_paths:
-        print(f"Performing inference on image: {image_path}")
-        tester.inference(image_path)
+        # Determine output path
+        output_filename = pathlib.Path(weight_file).stem + ".jpg" # e.g., LiSANet-1000-K1.jpg
+        output_path = output_dir_path / output_filename
+
+        # Run inference for the single image
+        try:
+            tester.inference(args.image_path, str(output_path)) # Pass output path to tester
+        except Exception as e:
+            print(f"Error during inference for {weight_file}: {e}")
+            continue # Skip to next weight file if inference fails
+
+    print("--- Inference complete for all K-folds ---")
+
 
 if __name__ == '__main__':
-    main()
+    main() 

@@ -161,3 +161,7 @@ cython_debug/
 datasets/
 runs/
 pretrain/
+inferences/
+inference/
+*.zip
+*.mlmodel

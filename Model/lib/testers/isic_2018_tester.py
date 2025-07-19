@@ -30,7 +30,7 @@ class ISIC2018Tester:
 
         self.statistics_dict = self.init_statistics_dict()
 
-    def inference(self, image_path):
+    def inference(self, image_path, output_path):
         test_transforms = transforms.Compose([
             transforms.Resize(self.opt["resize_shape"]),
             transforms.ToTensor(),
@@ -40,10 +40,6 @@ class ISIC2018Tester:
         image_pil = Image.open(image_path)
         w, h = image_pil.size
         image = test_transforms(image_pil)
-        dir_path, image_name = os.path.split(image_path)
-        dot_pos = image_name.find(".")
-        file_name = image_name[:dot_pos]
-        segmentation_image_path = os.path.join(dir_path, file_name + "_segmentation" + ".jpg")
 
         self.model.eval()
         with torch.no_grad():
@@ -54,8 +50,8 @@ class ISIC2018Tester:
         segmented_image = torch.argmax(output, dim=1).squeeze(0).to(dtype=torch.uint8).cpu().numpy()
         segmented_image = cv2.resize(segmented_image, (w, h), interpolation=cv2.INTER_AREA)
         segmented_image[segmented_image == 1] = 255
-        cv2.imwrite(segmentation_image_path, segmented_image)
-        print("Save segmented image to {}".format(segmentation_image_path))
+        cv2.imwrite(output_path, segmented_image)
+        print("Save segmented image to {}".format(output_path))
 
     def evaluation(self, dataloader):
         self.reset_statistics_dict()

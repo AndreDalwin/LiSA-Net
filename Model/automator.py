@@ -1,11 +1,11 @@
 import os
 
-# Set the base directory where the datasets are stored
+# Set the base directory where the datasets are storedd
 base_dir = './datasets'
 
 # Loop through the folders in the base directory
-for i in range(1, 6):
-    folder_name = f"ISIC-2018-500-K{i}"
+for i in range(5, 6):
+    folder_name = f"ISIC_{i}"
     old_path = os.path.join(base_dir, folder_name)
     new_path = os.path.join(base_dir, "ISIC-2018")
     

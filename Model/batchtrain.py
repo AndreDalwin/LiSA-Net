@@ -69,7 +69,7 @@ params_ISIC_2018 = {
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", type=str, default="ISIC-2018", help="dataset name")
-    parser.add_argument("--model", type=str, default="PMFSNet", help="model name")
+    parser.add_argument("--model", type=str, default="LiSANet", help="model name")
     parser.add_argument("--pretrain_weight", type=str, default=None, help="pre-trained weight file path")
     parser.add_argument("--dimension", type=str, default="2d", help="dimension of dataset images and models")
     parser.add_argument("--scaling_version", type=str, default="BASIC", help="scaling version of PMFSNet")
@@ -118,7 +118,7 @@ def rename_and_train():
     base_dir = './datasets'
 
     for i in range(1, 6):
-        folder_name = f"ISIC-2018-500-K{i}"
+        folder_name = f"ISIC-2018-2000-K{i}"
         old_path = os.path.join(base_dir, folder_name)
         new_path = os.path.join(base_dir, "ISIC-2018")
         
