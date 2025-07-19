@@ -51,14 +51,86 @@ The project builds upon the foundation of [PMFSNet: Polarized Multi-scale Featur
 			ISIC_0016060_segmentation.png
 ```
 
-## Architecture Components
+## Architecture
 
-### LiSA-Net Core Modules
+### LiSA-Net Architecture Diagram
+
+```mermaid
+graph TB
+    Input["Input Image<br/>(H×W×C)"] --> Enc1
+
+    subgraph Encoder ["<b>ENCODER PATH</b>"]
+        Enc1["DownSampleWithLocalPMFSBlock #1<br/>• ConvBlock (k=5, stride=2)<br/>• DenseFeatureStack + SE<br/>• Skip Conv + SE"] --> Enc2
+        Enc2["DownSampleWithLocalPMFSBlock #2<br/>• ConvBlock (k=3, stride=2)<br/>• DenseFeatureStack + SE<br/>• Skip Conv + SE"] --> Enc3
+        Enc3["DownSampleWithLocalPMFSBlock #3<br/>• ConvBlock (k=3, stride=2)<br/>• DenseFeatureStack + SE<br/>• Skip Conv + SE"] --> Bottleneck
+    end
+
+    Enc1 -.->|"Skip Connection 1<br/>(Channel Attention)"| Dec1
+    Enc2 -.->|"Skip Connection 2<br/>(Channel Attention)"| Dec2
+    Enc3 -.->|"Skip Connection 3<br/>(Channel Attention)"| Dec3
+
+    subgraph GlobalContext ["<b>BOTTLENECK - Global Context</b>"]
+        Bottleneck["GlobalPMFSBlock_AP_Separate<br/>Input: [x1, x2, x3] multi-scale"]
+        Bottleneck --> AMFF["Adaptive Multi-branch<br/>Feature Fusion (AMFF)"]
+        AMFF --> PMCS["Polarized Multi-scale<br/>Channel Self-attention (PMCS)"]
+        PMCS --> PMSS["Polarized Multi-scale<br/>Spatial Self-attention (PMSS)"]
+    end
+
+    subgraph Decoder ["<b>DECODER PATH</b>"]
+        PMSS --> Dec3["BottleConv + SE<br/>(concat with skip3)"]
+        Dec3 --> Fusion["Multi-scale Feature Fusion<br/>• skip1 (original res)<br/>• skip2 (upsample ×2)<br/>• skip3 (upsample ×4)"]
+        Dec2 -.-> Fusion
+        Dec1 -.-> Fusion
+    end
+
+    Fusion --> OutConv["Output ConvBlock<br/>• Conv 3×3<br/>• BatchNorm + ReLU<br/>• Channels = num_classes"]
+    OutConv --> FinalUp["Final Upsample ×2"]
+    FinalUp --> Output["Segmentation Mask<br/>(H×W×num_classes)"]
+
+    style Encoder fill:#e1f5fe
+    style GlobalContext fill:#fff3e0
+    style Decoder fill:#f3e5f5
+```
+
+### Architecture Components
+
+#### Core Modules
 
 1. **LiSASEBlock**: Squeeze-and-Excitation blocks for channel-wise feature recalibration
+   - Global Average Pooling → FC → ReLU → FC → Sigmoid
+   - Applied in EVERY ConvBlock throughout the network
+   
 2. **LiSAConvBlock**: Enhanced convolution blocks with integrated SE attention
+   - Structure: [BN] → ReLU → Pad → Conv → [SE Block]
+   - Provides adaptive channel-wise feature recalibration
+
 3. **LiSALocalPMFSBlock**: Local polarized multi-scale feature self-attention modules
+   - Contains DenseFeatureStack with dense connections
+   - Growth rates increase with depth: [4, 8, 16]
+   - Each unit includes ConvBlock + SE
+
 4. **LiSAGlobalPMFSBlock**: Global feature aggregation with multi-scale attention
+   - Processes features from all encoder levels simultaneously
+   - Implements both channel (PMCS) and spatial (PMSS) attention
+   - Linear complexity vs quadratic in standard self-attention
+
+### Key Design Features
+
+- **Ultra-Lightweight**: Only 0.99M parameters and 2.63 GFLOPs
+- **Multi-Scale Processing**: Leverages features from all encoder levels
+- **Efficient Attention**: Linear complexity through polarized decomposition
+- **SE-Enhanced**: Every convolution includes squeeze-and-excitation
+- **Dense Connections**: Within encoder blocks for feature reuse
+
+### Configuration (BASIC Version)
+
+| Parameter | Values |
+|-----------|--------|
+| Base channels | [24, 48, 64] |
+| Skip channels | [24, 48, 64] |
+| Units | [5, 10, 10] |
+| Growth rates | [4, 8, 16] |
+| PMFS channels | 64 |
 
 ## Training
 
@@ -91,11 +163,24 @@ python ./test.py --dataset ISIC-2018 --model LiSANet --pretrain_weight ./pretrai
 
 ### Inferring a single image segmentation result
 
-Running `inference.py` script to start the inference. The additional argument `--image_path` denotes the path of the inferred image. Inferring example:
+Running `inference.py` script to perform inference on a single image. The additional argument `--image_path` specifies the input image. Inferring example:
 
 ```python
-python ./inference.py --dataset ISIC-2018 --model LiSANet --pretrain_weight ./pretrain/LiSANet-BASIC_ISIC2018.pth --dimension 2d --scaling_version BASIC --image_path ./images/ISIC_0000550.jpg
+python ./Model/inference.py --dataset ISIC-2018 --model LiSANet --pretrain_weight ./Model/pretrain/LiSANet-Base-K4.pth --dimension 2d --scaling_version BASIC --image_path ./Model/pretrain/ISIC_0000013.jpg
 ```
+
+### Batch inference on multiple images
+
+Running `batchinference.py` script to perform inference on multiple images in a directory. The additional argument `--images_dir` specifies the directory containing input images:
+
+```python
+python ./Model/batchinference.py --dataset ISIC-2018 --model LiSANet --pretrain_weight ./Model/pretrain/LiSANet-Base-K4.pth --dimension 2d --scaling_version BASIC --images_dir ./Model/inference/Test-1000-K1
+```
+
+**Note**: 
+- Inference results are saved in the `Model/inferences/` directory
+- Pre-trained weights are available in the `Model/pretrain/` directory for different dataset sizes and K-folds
+- Test images for evaluation are located in `Model/inference/` organized by dataset size and K-fold
 
 ## Comparison Models
 
