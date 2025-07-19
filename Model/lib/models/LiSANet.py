@@ -1,4 +1,10 @@
 # -*- encoding: utf-8 -*-
+"""
+@author   :   andredalwin    
+@Contact  :   hello@andredalwin.com
+@DateTime :   2025/05/31
+@Version  :   1.0
+"""
 import os
 import sys
 

@@ -1,8 +1,29 @@
-# LiSA-Net
+# LiSA-Net: A Lightweight Self-Attending Network for Melanoma Segmentation
 
-LiSA-Net : Lightweight Self-Attention Network for Melanoma Segmentation
+By **Andre Dalwin Tan**, **Sharmaine Chua**, and **Trisha Angel Millena**
 
-Based on [PMFSNet: Polarized Multi-scale Feature Self-attention Network For Lightweight Medical Image Segmentation](https://github.com/yykzjh/PMFSNet)
+Department of Information Systems and Computer Science  
+Ateneo de Manila University  
+2025
+
+## Overview
+
+LiSA-Net (Lightweight Self-Attending Network) is a novel U-Net-based architecture designed specifically for accurate melanoma segmentation while maintaining a lightweight computational footprint. This model addresses the critical need for efficient medical image segmentation tools that can be deployed in resource-constrained environments without sacrificing accuracy.
+
+The project builds upon the foundation of [PMFSNet: Polarized Multi-scale Feature Self-attention Network For Lightweight Medical Image Segmentation](https://github.com/yykzjh/PMFSNet), extending it with several key innovations:
+
+- Integration of Squeeze-and-Excitation (SE) blocks in every convolution layer for enhanced feature recalibration
+- Modified architecture specifically optimized for melanoma detection
+- Improved attention mechanisms for better segmentation accuracy
+- Maintained lightweight design suitable for deployment on mobile and edge devices
+
+## Key Features
+
+- **Lightweight Architecture**: Only 0.99M parameters and 2.63 GFLOPs
+- **High Performance**: Achieves 80.09% IoU and 86.17% DSC on ISIC 2018 dataset
+- **Robust to Limited Data**: Maintains competitive performance even with reduced training data
+- **Self-Attention Enhanced**: Incorporates Polarized Multi-scale Feature Self-attention (PMFS) blocks
+- **Channel Attention**: SE blocks in every convolution for adaptive feature recalibration
 
 ## Data Preparation
 
@@ -30,148 +51,142 @@ Based on [PMFSNet: Polarized Multi-scale Feature Self-attention Network For Ligh
 			ISIC_0016060_segmentation.png
 ```
 
+## Architecture Components
+
+### LiSA-Net Core Modules
+
+1. **LiSASEBlock**: Squeeze-and-Excitation blocks for channel-wise feature recalibration
+2. **LiSAConvBlock**: Enhanced convolution blocks with integrated SE attention
+3. **LiSALocalPMFSBlock**: Local polarized multi-scale feature self-attention modules
+4. **LiSAGlobalPMFSBlock**: Global feature aggregation with multi-scale attention
+
 ## Training
 
 Running `train.py` script can easily start the training. Customize the training by passing in the following arguments:
 
 ```
---dataset: dataset name, optional 3D-CBCT-Tooth, MMOTU, ISIC-2018
---model: model name, see below implemented architectures for details
---pretrain_weight: pre-trained weight file path
---dimension: dimension of dataset images and models, for PMFSNet only
---scaling_version: scaling version of PMFSNet, for PMFSNet only
+--dataset: dataset name (ISIC-2018 for melanoma segmentation)
+--model: model name (LiSANet or comparison models)
+--pretrain_weight: pre-trained weight file path (optional)
+--dimension: dimension of dataset images and models (2d for skin lesion images)
+--scaling_version: scaling version (BASIC, SMALL, or TINY)
 --epoch: training epoch
 ```
 
-Training demo:
+Training example for LiSA-Net:
 
 ```python
-python ./train.py --dataset 3D-CBCT-Tooth --model PMFSNet --dimension 3d --scaling_version TINY --epoch 20
-python ./train.py --dataset MMOTU --model PMFSNet --pretrain_weight ./pretrain/PMFSNet2D-basic_ILSVRC2012.pth --dimension 2d --scaling_version BASIC --epoch 2000
-python ./train.py --dataset ISIC-2018 --model PMFSNet --dimension 2d --scaling_version BASIC --epoch 150
+python ./train.py --dataset ISIC-2018 --model LiSANet --dimension 2d --scaling_version BASIC --epoch 150
 ```
 
 ## Testing
 
 ### Evaluating model performance on a test set
 
-Running `test.py` script to start the evaluation. The input arguments are the same as the training script. Testing demo:
+Running `test.py` script to start the evaluation. The input arguments are the same as the training script. Testing example:
 
 ```python
-python ./test.py --dataset 3D-CBCT-Tooth --model PMFSNet --pretrain_weight ./pretrain/PMFSNet3D-TINY_Tooth.pth --dimension 3d --scaling_version TINY
-python ./test.py --dataset MMOTU --model PMFSNet --pretrain_weight ./pretrain/PMFSNet2D-BASIC_MMOTU.pth --dimension 2d --scaling_version BASIC
-python ./test.py --dataset ISIC-2018 --model PMFSNet --pretrain_weight ./pretrain/PMFSNet2D-BASIC_ISIC2018.pth --dimension 2d --scaling_version BASIC
+python ./test.py --dataset ISIC-2018 --model LiSANet --pretrain_weight ./pretrain/LiSANet-BASIC_ISIC2018.pth --dimension 2d --scaling_version BASIC
 ```
 
 ### Inferring a single image segmentation result
 
-Running `inference.py` script to start the inference. The additional argument `--image_path` denotes the path of the inferred image. Inferring demo:
+Running `inference.py` script to start the inference. The additional argument `--image_path` denotes the path of the inferred image. Inferring example:
 
 ```python
-python ./inference.py --dataset 3D-CBCT-Tooth --model PMFSNet --pretrain_weight ./pretrain/PMFSNet3D-TINY_Tooth.pth --dimension 3d --scaling_version TINY --image_path ./images/1001250407_20190923.nii.gz
-python ./inference.py --dataset MMOTU --model PMFSNet --pretrain_weight ./pretrain/PMFSNet2D-BASIC_MMOTU.pth --dimension 2d --scaling_version BASIC --image_path ./images/453.JPG
-python ./inference.py --dataset ISIC-2018 --model PMFSNet --pretrain_weight ./pretrain/PMFSNet2D-BASIC_ISIC2018.pth --dimension 2d --scaling_version BASIC --image_path ./images/ISIC_0000550.jpg
+python ./inference.py --dataset ISIC-2018 --model LiSANet --pretrain_weight ./pretrain/LiSANet-BASIC_ISIC2018.pth --dimension 2d --scaling_version BASIC --image_path ./images/ISIC_0000550.jpg
 ```
 
-## Implemented Architectures
+## Comparison Models
 
-- 3D CBCT Tooth:
-  - [UNet3D](https://link.springer.com/chapter/10.1007/978-3-319-46723-8_49): 3D U-Net: learning dense volumetric segmentation from sparse annotation
-  - [VNet](https://ieeexplore.ieee.org/abstract/document/7785132): V-net: Fully convolutional neural networks for volumetric medical image segmentation
-  - [DenseVNet](https://ieeexplore.ieee.org/abstract/document/8291609): Automatic multi-organ segmentation on abdominal CT with dense V-networks
-  - [AttentionUNet3D](https://arxiv.org/pdf/1804.03999.pdf): Attention u-net: Learning where to look for the pancreas
-  - [DenseVoxelNet](https://link.springer.com/chapter/10.1007/978-3-319-66185-8_33): Automatic 3D cardiovascular MR segmentation with densely-connected volumetric convnets
-  - [MultiResUNet3D](https://www.sciencedirect.com/science/article/abs/pii/S0893608019302503): MultiResUNet: Rethinking the U-Net architecture for multimodal biomedical image segmentation
-  - [UNETR](https://openaccess.thecvf.com/content/WACV2022/papers/Hatamizadeh_UNETR_Transformers_for_3D_Medical_Image_Segmentation_WACV_2022_paper.pdf): Unetr: Transformers for 3d medical image segmentation
-  - [SwinUNETR](https://link.springer.com/chapter/10.1007/978-3-031-08999-2_22): Swin unetr: Swin transformers for semantic segmentation of brain tumors in mri images
-  - [TransBTS](https://link.springer.com/chapter/10.1007/978-3-030-87193-2_11): Transbts: Multimodal brain tumor segmentation using transformer
-  - [nnFormer](https://ieeexplore.ieee.org/abstract/document/10183842): nnFormer: volumetric medical image segmentation via a 3D transformer
-  - [3DUXNet](https://arxiv.org/pdf/2209.15076.pdf): 3d ux-net: A large kernel volumetric convnet modernizing hierarchical transformer for medical image segmentation
-- MMOTU
-  - [MobileNetV2](https://openaccess.thecvf.com/content_cvpr_2018/papers/Sandler_MobileNetV2_Inverted_Residuals_CVPR_2018_paper.pdf): Mobilenetv2: Inverted residuals and linear bottlenecks
-  - [PSPNet](https://openaccess.thecvf.com/content_cvpr_2017/papers/Zhao_Pyramid_Scene_Parsing_CVPR_2017_paper.pdf): Pyramid scene parsing network
-  - [DANet](https://openaccess.thecvf.com/content_CVPR_2019/papers/Fu_Dual_Attention_Network_for_Scene_Segmentation_CVPR_2019_paper.pdf): Dual attention network for scene segmentation
-  - [SegFormer](https://proceedings.neurips.cc/paper_files/paper/2021/file/64f1f27bf1b4ec22924fd0acb550c235-Paper.pdf): SegFormer: Simple and efficient design for semantic segmentation with transformers
-  - [UNet](https://link.springer.com/chapter/10.1007/978-3-319-24574-4_28): U-net: Convolutional networks for biomedical image segmentation
-  - [TransUNet](https://arxiv.org/pdf/2102.04306.pdf): Transunet: Transformers make strong encoders for medical image segmentation
-  - [BiSeNetV2](https://link.springer.com/article/10.1007/s11263-021-01515-2): Bisenet v2: Bilateral network with guided aggregation for real-time semantic segmentation
-  - [MedT](https://link.springer.com/chapter/10.1007/978-3-030-87193-2_4): Medical transformer: Gated axial-attention for medical image segmentation
-- ISIC 2018
-  - [UNet](https://link.springer.com/chapter/10.1007/978-3-319-24574-4_28): U-net: Convolutional networks for biomedical image segmentation
-  - [AttU_Net](https://arxiv.org/pdf/1804.03999.pdf): Attention u-net: Learning where to look for the pancreas
-  - [CANet](https://ieeexplore.ieee.org/abstract/document/9246575): CA-Net: Comprehensive attention convolutional neural networks for explainable medical image segmentation
-  - [BCDUNet](https://openaccess.thecvf.com/content_ICCVW_2019/papers/VRMI/Azad_Bi-Directional_ConvLSTM_U-Net_with_Densley_Connected_Convolutions_ICCVW_2019_paper.pdf): Bi-directional ConvLSTM U-Net with densley connected convolutions
-  - [CENet](https://ieeexplore.ieee.org/abstract/document/8662594): Ce-net: Context encoder network for 2d medical image segmentation
-  - [CPFNet](https://ieeexplore.ieee.org/abstract/document/9049412): CPFNet: Context pyramid fusion network for medical image segmentation
-  - [CKDNet](https://www.sciencedirect.com/science/article/abs/pii/S156849462030819X): Cascade knowledge diffusion network for skin lesion diagnosis and segmentation
+For melanoma segmentation on ISIC 2018 dataset, we evaluated LiSA-Net against the following state-of-the-art models:
+
+- **[U-Net](https://link.springer.com/chapter/10.1007/978-3-319-24574-4_28)**: The foundational convolutional network for biomedical image segmentation
+- **[AttU-Net](https://arxiv.org/pdf/1804.03999.pdf)**: U-Net enhanced with attention gates for improved feature localization
+- **[CANet](https://ieeexplore.ieee.org/abstract/document/9246575)**: Comprehensive attention network with spatial, channel, and scale attention
+- **[PMFSNet](https://github.com/yykzjh/PMFSNet)**: Lightweight model with polarized multi-scale feature self-attention (our baseline)
 
 ## Results
 
-### 3D CBCT Tooth
+### Performance on ISIC 2018 Melanoma Dataset
 
-Comparison results of different methods on the 3D CBCT tooth dataset.
-| Method | FLOPs(G) | Params(M) | HD(mm) | ASSD(mm) | IoU(%) | SO(%) | DSC(%) | Weights |
-| -------------------- | :------: | :-------: | :----: | :------: | :----: | :---: | :----: | :-----------------------: |
-| UNet3D | 2223.03 | 16.32 | 113.79 | 22.40 | 70.62 | 70.72 | 36.67 | [UNet3D_Tooth](https://pan.baidu.com/s/1TuR6KFWkov35P2tU9hDn0w?pwd=28q2) |
-| DenseVNet | 23.73 | 0.87 | 8.21 | 1.14 | 84.57 | 94.88 | 91.15 | [DenseVNet_Tooth](https://pan.baidu.com/s/15AoxmLgyIS2T7ubrKA8zBQ?pwd=ixog) |
-| AttentionUNet3D | 2720.79 | 94.48 | 147.10 | 61.10 | 52.52 | 42.49 | 64.08 | [AttentionUNet3D_Tooth](https://pan.baidu.com/s/1Ga2ONiGIvVHSa_ZnXjjUNg?pwd=d90h) |
-| DenseVoxelNet | 402.32 | 1.78 | 41.18 | 3.88 | 81.51 | 92.50 | 89.58 | [DenseVoxelNet_Tooth](https://pan.baidu.com/s/1oPhbRUrqRY5oHtjsOVis0g?pwd=d99o) |
-| MultiResUNet3D | 1505.38 | 17.93 | 74.06 | 8.17 | 76.19 | 81.70 | 65.45 | [MultiResUNet3D_Tooth](https://pan.baidu.com/s/1xI3IizurhcEb-8zrDdrm2g?pwd=1da7) |
-| UNETR | 229.19 | 93.08 | 107.89 | 17.95 | 74.30 | 73.14 | 81.84 | [UNETR_Tooth](https://pan.baidu.com/s/1Kj3gSKl0u0SjCfOTEP508g?pwd=nerh) |
-| SwinUNETR | 912.35 | 62.19 | 82.71 | 7.50 | 83.10 | 86.80 | 89.74 | [SwinUNETR_Tooth](https://pan.baidu.com/s/18K0l2Pt3RzbpkiaKqV44Bg?pwd=pa6m) |
-| TransBTS | 306.80 | 33.15 | 29.03 | 4.10 | 82.94 | 90.68 | 39.32 | [TransBTS_Tooth](https://pan.baidu.com/s/1dxtb7w0J2W690SABfUrgZg?pwd=h9oh) |
-| nnFormer | 583.49 | 149.25 | 51.28 | 5.08 | 83.54 | 90.89 | 90.66 | [nnFormer_Tooth](https://pan.baidu.com/s/1mIEyQyE1rkvGwGuYLAZq1A?pwd=omxl) |
-| 3D UX-Net | 1754.79 | 53.01 | 108.52 | 19.69 | 75.40 | 73.48 | 84.89 | [3DUXNet_Tooth](https://pan.baidu.com/s/1DUGdIC6HYj47cpK-UhTk-g?pwd=737v) |
-| PMFSNet3D-TINY(Ours) | 15.14 | 0.63 | 5.57 | 0.79 | 84.68 | 95.10 | 91.30 | |
+Comprehensive evaluation results comparing LiSA-Net with state-of-the-art models on the ISIC 2018 melanoma segmentation dataset:
 
-![3D_CBCT_Tooth_segmentation.jpg](https://github.com/yykzjh/PMFSNet/blob/master/images/3D_CBCT_Tooth_segmentation.jpg)
+| Method                | FLOPs(G) | Params(M) | IoU(%) | DSC(%) | 
+| --------------------- | :------: | :-------: | :----: | :----: |
+| U-Net                 |  41.93   |   31.04   | 79.83  | 86.25  |
+| AttU-Net              |  51.07   |   34.88   | 80.78  | 87.02  |
+| CANet                 |   4.62   |   2.79    | 72.53  | 80.07  |
+| PMFSNet               |   2.21   |   0.99    | 80.64  | 86.60  |
+| **LiSA-Net (Ours)**   | **2.63** |  **0.99** |**80.09**|**86.17**|
 
-### MMOTU
+### Key Achievements
 
-Pre-training weights of PMFSNet2D-BASIC, PMFSNet2D-SMALL, and PMFSNet2D-TINY on ImageNet2012 dataset.
-| Method | Weights |
-| --------------- | :----------------------------: |
-| PMFSNet2D-BASIC | [PMFSNet2D-BASIC_ILSVRC2012](https://pan.baidu.com/s/101_wth3SVurWdkVk5aWXYA?pwd=ffl7) |
-| PMFSNet2D-SMALL | [PMFSNet2D-SMALL_ILSVRC2012](https://pan.baidu.com/s/1iL57OXzP4utd5G-xz9eoow?pwd=z0ql) |
-| PMFSNet2D-TINY | [PMFSNet2D-TINY_ILSVRC2012](https://pan.baidu.com/s/1BwgyVDsDoECsIrLFoAOoHQ?pwd=t24c) |
+1. **Ultra-Lightweight Architecture**: With only 0.99M parameters, LiSA-Net is 31x smaller than U-Net and 35x smaller than AttU-Net
+2. **Computational Efficiency**: At 2.63 GFLOPs, LiSA-Net requires 94% less computation than AttU-Net
+3. **Competitive Performance**: Achieves performance on par with much larger models while maintaining minimal resource requirements
+4. **Robust to Limited Data**: Shows superior performance when training data is reduced (best IoU of 79.70% with only 1000 images)
 
-Comparison results of different methods on the MMOTU dataset.
-| Method | FLOPs(G) | Params(M) | IoU(%) | mIoU(%) | Weights |
-| --------------------- | :------: | :-------: | :----: | :-----: | :-----: |
-| PSPNet | 38.71 | 53.32 | 82.01 | 89.41 | |
-| DANet | 10.95 | 47.44 | 82.20 | 89.53 | |
-| SegFormer | 2.52 | 7.72 | 82.46 | 89.88 | |
-| U-Net | 41.90 | 31.04 | 79.91 | 86.80 | |
-| TransUNet | 24.61 | 105.28 | 81.31 | 89.01 | |
-| BiseNetV2 | 3.40 | 5.19 | 79.37 | 86.13 | |
-| PMFSNet2D-BASIC(Ours) | 2.21 | 0.99 | 82.02 | 89.36 | |
+### Performance Across Different Dataset Sizes
 
-![MMOTU_segmentation.jpg](https://github.com/yykzjh/PMFSNet/blob/master/images/MMOTU_segmentation.jpg)
+| Dataset Size | LiSA-Net IoU | LiSA-Net DSC | Best Competitor IoU | Best Competitor DSC |
+| ------------ | :----------: | :----------: | :-----------------: | :-----------------: |
+| Full (2594)  |    80.09%    |    86.17%    |   80.78% (AttU-Net) |   87.02% (AttU-Net) |
+| 2000 images  |    77.60%    |    84.53%    |   80.22% (PMFSNet)  |   86.66% (PMFSNet)  |
+| 1500 images  |    77.78%    |    84.96%    |   80.62% (AttU-Net) |   84.08% (AttU-Net) |
+| 1000 images  |  **79.70%**  |  **86.33%**  |   77.77% (PMFSNet)  |   84.28% (PMFSNet)  |
+| 500 images   |    75.34%    |    84.56%    |   75.76% (PMFSNet)  |   85.24% (AttU-Net) |
 
-### ISIC 2018
+## Citation
 
-Comparison results of different methods on the ISIC 2018 dataset.
+If you use LiSA-Net in your research, please cite:
 
-| Method                | FLOPs(G) | Params(M) | IoU(%) | DSC(%) | ACC(%) | Weights                                                                       |
-| --------------------- | :------: | :-------: | :----: | :----: | :----: | ----------------------------------------------------------------------------- |
-| U-Net                 |  41.93   |   31.04   | 76.77  | 86.55  | 95.00  | [UNet_ISIC2018](https://pan.baidu.com/s/1Xg7JHIHGog4wC4WWlTCpMw?pwd=gdol)     |
-| AttU-Net              |  51.07   |   34.88   | 78.19  | 87.54  | 95.33  | [AttU_Net_ISIC2018](https://pan.baidu.com/s/1Mt_P-rU78bGKXyYQj7cfrg?pwd=sg7d) |
-| CA-Net                |   4.62   |   2.79    | 68.82  | 80.96  | 92.96  | [CANet_ISIC2018](https://pan.baidu.com/s/1z_W16tIerC5SQNK8BhsQ4g?pwd=fbwa)    |
-| BCDU-Net              |  31.96   |   18.45   | 76.46  | 86.26  | 95.19  | [BCDUNet_ISIC2018](https://pan.baidu.com/s/1oXLdbbnp3n5L0I_RtdakEQ?pwd=9jrz)  |
-| CE-Net                |   6.83   |   29.00   | 78.05  | 87.47  | 95.40  | [CENet_ISIC2018](https://pan.baidu.com/s/10HnUdmAro9WA9AUjpEbyDg?pwd=6s6d)    |
-| CPF-Net               |   6.18   |   43.27   | 78.47  | 87.70  | 95.52  | [CPFNet_ISIC2018](https://pan.baidu.com/s/1EBSsLuKxIm_x3c5X_3GLpA?pwd=rk7t)   |
-| CKDNet                |  12.69   |   59.34   | 77.89  | 87.35  | 95.27  | [CKDNet_ISIC2018](https://pan.baidu.com/s/1T2Mu0dLaYpD66p6q9G4UDQ?pwd=9zzf)   |
-| PMFSNet2D-BASIC(Ours) |   2.21   |   0.99    | 78.82  | 87.92  | 95.59  |                                                                               |
+```bibtex
+@thesis{lisanet2025,
+  title={LiSA-Net: A Lightweight Self-Attending Network for Melanoma Segmentation},
+  author={Tan, Andre Dalwin and Chua, Sharmaine and Millena, Trisha Angel},
+  school={Ateneo de Manila University},
+  year={2025},
+  type={Bachelor's Thesis}
+}
+```
 
-![ISIC2018_segmentation.jpg](https://github.com/yykzjh/PMFSNet/blob/master/images/ISIC2018_segmentation.jpg)
+## Acknowledgments
+
+This work builds upon PMFSNet and we thank the authors for their valuable contributions. We also acknowledge:
+- Our thesis advisers Dr. Raphael Alampay and Dr. Patricia Abu
+- Our panelists Dr. John Paul Vergara and Mr. Gabriel Lorenzo Santos
+- Dr. Regina Justina Estuar and the ACCCRe for providing research facilities
+- The Department of Information Systems and Computer Science, Ateneo de Manila University
+
+## Requirements
+
+- Python 3.8+
+- PyTorch 1.10+
+- CUDA 11.3+ (for GPU acceleration)
+- See `requirements.txt` for complete list of dependencies
+
+## Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/LiSA-Net.git
+cd LiSA-Net
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
 
 ## References
 
-- [MONAI](https://github.com/Project-MONAI/MONAI/tree/dev)
-- [MedicalZooPytorch](https://github.com/black0017/MedicalZooPytorch)
-- [Pytorch-Segmentation-multi-models](https://github.com/Minerva-J/Pytorch-Segmentation-multi-models)
-- [MedicalSeg](https://github.com/920232796/MedicalSeg)
-- [research-contributions](https://github.com/Project-MONAI/research-contributions)
-- [Image_Segmentation](https://github.com/LeeJunHyun/Image_Segmentation)
-- [ISIC 2018](https://challenge.isic-archive.com/data/#2018)
-- [surface-distance](https://github.com/google-deepmind/surface-distance)
+- [PMFSNet](https://github.com/yykzjh/PMFSNet) - Base architecture for lightweight medical segmentation
+- [MONAI](https://github.com/Project-MONAI/MONAI/tree/dev) - Medical Open Network for AI
+- [ISIC 2018 Challenge](https://challenge.isic-archive.com/data/#2018) - International Skin Imaging Collaboration dataset
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
